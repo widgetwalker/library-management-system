@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Books - Library Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📚 My Library</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="books.html" class="nav-link active">Browse Books</a></li>
+                <li><a href="admin.html" class="nav-link">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="section">
+        <div class="container">
+            <h1 class="text-center mb-4">Browse Your Collection</h1>
+
+            <!-- Search Bar -->
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by title or author...">
+            </div>
+
+            <!-- Filter & Sort Controls -->
+            <div class="controls">
+                <div class="control-group">
+                    <label class="control-label">Category:</label>
+                    <select id="categoryFilter" class="form-select">
+                        <option value="all">All Categories</option>
+                        <option value="Fiction">Fiction</option>
+                        <option value="Non-Fiction">Non-Fiction</option>
+                        <option value="Technical">Technical</option>
+                        <option value="Science Fiction">Science Fiction</option>
+                        <option value="Mystery">Mystery</option>
+                        <option value="Biography">Biography</option>
+                        <option value="Self-Help">Self-Help</option>
+                        <option value="History">History</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Status:</label>
+                    <select id="statusFilter" class="form-select">
+                        <option value="all">All Status</option>
+                        <option value="to-read">To Read</option>
+                        <option value="reading">Currently Reading</option>
+                        <option value="finished">Finished</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label">Sort by:</label>
+                    <select id="sortSelect" class="form-select">
+                        <option value="date-new">Newest First</option>
+                        <option value="date-old">Oldest First</option>
+                        <option value="title-asc">Title (A-Z)</option>
+                        <option value="title-desc">Title (Z-A)</option>
+                        <option value="rating-high">Rating (High-Low)</option>
+                        <option value="rating-low">Rating (Low-High)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Results Count -->
+            <div class="text-center mb-3">
+                <p id="resultsCount" style="color: var(--text-muted);"></p>
+            </div>
+
+            <!-- Books Grid -->
+            <div class="grid grid-auto" id="booksGrid">
+                <!-- Books will be inserted here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="text-center" style="display: none; padding: 3rem;">
+                <h3 style="color: var(--text-muted);">No books found</h3>
+                <p style="color: var(--text-muted);">Try adjusting your search or filters</p>
+                <a href="admin.html" class="btn btn-primary mt-3">Add New Book</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize sample data
+        initializeSampleData();
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const categoryFilter = document.getElementById('categoryFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const sortSelect = document.getElementById('sortSelect');
+        const booksGrid = document.getElementById('booksGrid');
+        const resultsCount = document.getElementById('resultsCount');
+        const emptyState = document.getElementById('emptyState');
+
+        // Load and display books
+        function displayBooks() {
+            const searchQuery = searchInput.value;
+            const category = categoryFilter.value;
+            const status = statusFilter.value;
+            const sortBy = sortSelect.value;
+
+            // Get filtered books
+            let books = combineFilters(searchQuery, category, status);
+
+            // Sort books
+            books = sortBooks(books, sortBy);
+
+            // Update results count
+            resultsCount.textContent = `Showing ${books.length} book${books.length !== 1 ? 's' : ''}`;
+
+            // Display books or empty state
+            if (books.length === 0) {
+                booksGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+            } else {
+                booksGrid.style.display = 'grid';
+                emptyState.style.display = 'none';
+                booksGrid.innerHTML = books.map(book => createBookCard(book)).join('');
+            }
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', displayBooks);
+        categoryFilter.addEventListener('change', displayBooks);
+        statusFilter.addEventListener('change', displayBooks);
+        sortSelect.addEventListener('change', displayBooks);
+
+        // Initial load
+        displayBooks();
+
+        // Auto-refresh every 5 seconds to catch changes from admin page
+        setInterval(() => {
+            displayBooks();
+        }, 5000);
+    </script>
+</body>
+
+</html>

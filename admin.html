@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Library Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="navbar-brand">📚 My Library</a>
+            <ul class="navbar-nav">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="books.html" class="nav-link">Browse Books</a></li>
+                <li><a href="admin.html" class="nav-link active">Admin</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="section">
+        <div class="container">
+            <h1 class="text-center mb-4">Admin Panel</h1>
+
+            <!-- Add/Edit Book Form -->
+            <div class="glass-card mb-4">
+                <h2 id="formTitle">Add New Book</h2>
+                <form id="bookForm">
+                    <input type="hidden" id="bookId">
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="title" class="form-label">Title *</label>
+                            <input type="text" id="title" class="form-input" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="author" class="form-label">Author *</label>
+                            <input type="text" id="author" class="form-input" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-2">
+                        <div class="form-group">
+                            <label for="category" class="form-label">Category *</label>
+                            <select id="category" class="form-select" required>
+                                <option value="">Select Category</option>
+                                <option value="Fiction">Fiction</option>
+                                <option value="Non-Fiction">Non-Fiction</option>
+                                <option value="Technical">Technical</option>
+                                <option value="Science Fiction">Science Fiction</option>
+                                <option value="Mystery">Mystery</option>
+                                <option value="Biography">Biography</option>
+                                <option value="Self-Help">Self-Help</option>
+                                <option value="History">History</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="status" class="form-label">Reading Status *</label>
+                            <select id="status" class="form-select" required>
+                                <option value="to-read">To Read</option>
+                                <option value="reading">Currently Reading</option>
+                                <option value="finished">Finished</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="coverUrl" class="form-label">Cover Image URL (optional)</label>
+                        <input type="url" id="coverUrl" class="form-input" placeholder="https://example.com/cover.jpg">
+                        <small style="color: var(--text-muted);">Leave blank to use default cover</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rating" class="form-label">Rating</label>
+                        <div id="ratingInput" class="stars interactive">
+                            <span class="star" data-rating="1">☆</span>
+                            <span class="star" data-rating="2">☆</span>
+                            <span class="star" data-rating="3">☆</span>
+                            <span class="star" data-rating="4">☆</span>
+                            <span class="star" data-rating="5">☆</span>
+                        </div>
+                        <input type="hidden" id="rating" value="0">
+                    </div>
+
+                    <div class="flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <span id="submitText">Add Book</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="cancelBtn" style="display: none;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Books List -->
+            <div class="glass-card">
+                <div class="flex-between mb-3">
+                    <h2>All Books</h2>
+                    <div>
+                        <span id="bookCount" style="color: var(--text-muted);"></span>
+                    </div>
+                </div>
+
+                <div class="grid grid-auto" id="adminBooksGrid">
+                    <!-- Books will be inserted here -->
+                </div>
+
+                <div id="emptyState" class="text-center" style="display: none; padding: 2rem;">
+                    <p style="color: var(--text-muted);">No books in your library yet. Add your first book above!</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize sample data
+        initializeSampleData();
+
+        // DOM Elements
+        const bookForm = document.getElementById('bookForm');
+        const formTitle = document.getElementById('formTitle');
+        const submitText = document.getElementById('submitText');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const bookIdInput = document.getElementById('bookId');
+        const titleInput = document.getElementById('title');
+        const authorInput = document.getElementById('author');
+        const categoryInput = document.getElementById('category');
+        const statusInput = document.getElementById('status');
+        const coverUrlInput = document.getElementById('coverUrl');
+        const ratingInput = document.getElementById('rating');
+        const ratingStars = document.getElementById('ratingInput');
+        const adminBooksGrid = document.getElementById('adminBooksGrid');
+        const bookCount = document.getElementById('bookCount');
+        const emptyState = document.getElementById('emptyState');
+
+        let currentRating = 0;
+
+        // Star Rating Interaction
+        ratingStars.querySelectorAll('.star').forEach(star => {
+            star.addEventListener('click', function () {
+                currentRating = parseInt(this.dataset.rating);
+                ratingInput.value = currentRating;
+                updateStarDisplay();
+            });
+
+            star.addEventListener('mouseenter', function () {
+                const hoverRating = parseInt(this.dataset.rating);
+                updateStarDisplay(hoverRating);
+            });
+        });
+
+        ratingStars.addEventListener('mouseleave', function () {
+            updateStarDisplay();
+        });
+
+        function updateStarDisplay(hoverRating = null) {
+            const displayRating = hoverRating !== null ? hoverRating : currentRating;
+            ratingStars.querySelectorAll('.star').forEach((star, index) => {
+                if (index < displayRating) {
+                    star.textContent = '★';
+                    star.classList.add('filled');
+                    star.classList.remove('empty');
+                } else {
+                    star.textContent = '☆';
+                    star.classList.add('empty');
+                    star.classList.remove('filled');
+                }
+            });
+        }
+
+        // Form Submit
+        bookForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const bookData = {
+                title: titleInput.value.trim(),
+                author: authorInput.value.trim(),
+                category: categoryInput.value,
+                status: statusInput.value,
+                coverUrl: coverUrlInput.value.trim(),
+                rating: parseInt(ratingInput.value)
+            };
+
+            const bookId = bookIdInput.value;
+
+            if (bookId) {
+                // Update existing book
+                updateBook(bookId, bookData);
+            } else {
+                // Add new book
+                addBook(bookData);
+            }
+
+            resetForm();
+            loadBooks();
+        });
+
+        // Cancel Edit
+        cancelBtn.addEventListener('click', resetForm);
+
+        // Reset Form
+        function resetForm() {
+            bookForm.reset();
+            bookIdInput.value = '';
+            currentRating = 0;
+            updateStarDisplay();
+            formTitle.textContent = 'Add New Book';
+            submitText.textContent = 'Add Book';
+            cancelBtn.style.display = 'none';
+        }
+
+        // Edit Book
+        window.editBook = function (id) {
+            const book = getBookById(id);
+            if (!book) return;
+
+            bookIdInput.value = book.id;
+            titleInput.value = book.title;
+            authorInput.value = book.author;
+            categoryInput.value = book.category;
+            statusInput.value = book.status;
+            coverUrlInput.value = book.coverUrl;
+            currentRating = book.rating;
+            ratingInput.value = book.rating;
+            updateStarDisplay();
+
+            formTitle.textContent = 'Edit Book';
+            submitText.textContent = 'Update Book';
+            cancelBtn.style.display = 'inline-block';
+
+            // Scroll to form
+            bookForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        // Delete Book
+        window.confirmDelete = function (id) {
+            const book = getBookById(id);
+            if (!book) return;
+
+            if (confirm(`Are you sure you want to delete "${book.title}"?`)) {
+                deleteBook(id);
+                loadBooks();
+                resetForm();
+            }
+        };
+
+        // Load Books
+        function loadBooks() {
+            const books = getAllBooks();
+            bookCount.textContent = `${books.length} book${books.length !== 1 ? 's' : ''}`;
+
+            if (books.length === 0) {
+                adminBooksGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            adminBooksGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+
+            const sortedBooks = sortBooks(books, 'date-new');
+            adminBooksGrid.innerHTML = sortedBooks.map(book => createBookCard(book, true)).join('');
+        }
+
+        // Initial load
+        loadBooks();
+    </script>
+</body>
+
+</html>
