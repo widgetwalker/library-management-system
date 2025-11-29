@@ -178,13 +178,7 @@ This project is open source and available under the [MIT License](LICENSE).
 
 ## 👤 Author
 
-Built with ❤️ by [Your Name]
-
-## 🔗 Links
-
-- [Live Demo](#)
-- [Report Bug](#)
-- [Request Feature](#)
+Built with ❤️ by widgetwalker
 
 ---
 
